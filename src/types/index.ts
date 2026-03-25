@@ -31,6 +31,15 @@ export interface FamilyMember {
   avatarUrl?: string
 }
 
+export interface MemoryMedia {
+  id: string
+  memoryId: string
+  mediaType: 'photo' | 'video'
+  storageKey: string
+  url: string
+  createdAt: string
+}
+
 export interface Memory {
   id: string
   familyId: string
@@ -45,6 +54,7 @@ export interface Memory {
   people: string[]
   mediaCount: number
   coverUrl?: string
+  media?: MemoryMedia[]
   createdAt: string
 }
 

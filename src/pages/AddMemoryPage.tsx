@@ -4,6 +4,7 @@ import { useAuthStore } from '@/store/auth'
 import { api } from '@/lib/api'
 import type { Memory, MemoryCategory } from '@/types'
 import { X } from 'lucide-react'
+import { PhotoUploader } from '@/components/media/PhotoUploader'
 
 const CATEGORIES: { value: MemoryCategory; label: string; emoji: string }[] = [
   { value: 'everyday', label: 'Quotidien', emoji: '☀️' },
@@ -30,6 +31,7 @@ export function AddMemoryPage() {
   const [people, setPeople] = useState<string[]>([])
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
+  const [createdMemoryId, setCreatedMemoryId] = useState<string | null>(null)
 
   const familyId = useAuthStore((s) => s.familyId)
   const navigate = useNavigate()
@@ -55,7 +57,7 @@ export function AddMemoryPage() {
     setError('')
     setLoading(true)
     try {
-      await api.post<Memory>('/memories', {
+      const mem = await api.post<Memory>('/memories', {
         title,
         description,
         memory_date: memoryDate,
@@ -65,6 +67,7 @@ export function AddMemoryPage() {
         tags,
         people,
       })
+      setCreatedMemoryId(mem.id)
       navigate('/timeline')
     } catch {
       setError('Impossible de sauvegarder le souvenir')
@@ -230,6 +233,16 @@ export function AddMemoryPage() {
             ))}
           </div>
         </div>
+
+        {/* Photos — disponible après création du souvenir */}
+        {createdMemoryId && (
+          <PhotoUploader memoryId={createdMemoryId} />
+        )}
+        {!createdMemoryId && (
+          <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-4 text-center">
+            <p className="text-xs text-gray-400">Les photos pourront être ajoutées après la sauvegarde</p>
+          </div>
+        )}
 
         {error && (
           <p className="text-sm text-red-500 bg-red-50 px-4 py-2.5 rounded-lg">{error}</p>

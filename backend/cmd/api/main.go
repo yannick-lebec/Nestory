@@ -16,6 +16,7 @@ import (
 	"nestory/api/config"
 	"nestory/api/internal/auth"
 	"nestory/api/internal/family"
+	"nestory/api/internal/media"
 	"nestory/api/internal/memory"
 	"nestory/api/internal/shared/middleware"
 )
@@ -53,6 +54,22 @@ func main() {
 	memorySvc := memory.NewService(memoryRepo)
 	memoryHandler := memory.NewHandler(memorySvc)
 
+	// Media (optional — requires S3 config)
+	var mediaHandler *media.Handler
+	if cfg.StorageEnabled {
+		storage, err := media.NewStorage(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Bucket, cfg.S3UseSSL)
+		if err != nil {
+			log.Printf("storage init failed (uploads disabled): %v", err)
+		} else {
+			mediaRepo := media.NewRepository(db)
+			mediaSvc := media.NewService(mediaRepo, storage)
+			mediaHandler = media.NewHandler(mediaSvc)
+			log.Println("storage connected")
+		}
+	} else {
+		log.Println("storage not configured — uploads disabled")
+	}
+
 	// Router
 	r := gin.Default()
 	r.Use(corsMiddleware())
@@ -68,6 +85,9 @@ func main() {
 
 	familyHandler.Register(protected.Group("/families"))
 	memoryHandler.Register(protected.Group("/memories"))
+	if mediaHandler != nil {
+		mediaHandler.Register(protected.Group("/memories"))
+	}
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})

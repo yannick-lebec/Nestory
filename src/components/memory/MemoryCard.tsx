@@ -56,6 +56,24 @@ export function MemoryCard({ memory }: Props) {
           <p className="text-sm text-gray-500 line-clamp-2 mb-3">{memory.description}</p>
         )}
 
+        {memory.media && memory.media.length > 0 && (
+          <div className="flex gap-1.5 mb-3 overflow-hidden rounded-lg">
+            {memory.media.slice(0, 3).map((m, i) => (
+              <div
+                key={m.id}
+                className={`relative overflow-hidden rounded-lg bg-gray-100 ${memory.media!.length === 1 ? 'w-full aspect-video' : 'flex-1 aspect-square'}`}
+              >
+                <img src={m.url} alt="" className="w-full h-full object-cover" />
+                {i === 2 && memory.media!.length > 3 && (
+                  <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-semibold text-sm">
+                    +{memory.media!.length - 3}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+
         <div className="flex flex-wrap gap-3 text-xs text-gray-400">
           {memory.locationName && (
             <span className="flex items-center gap-1">
