@@ -57,7 +57,7 @@ func main() {
 	// Media (optional — requires S3 config)
 	var mediaHandler *media.Handler
 	if cfg.StorageEnabled {
-		storage, err := media.NewStorage(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Bucket, cfg.S3UseSSL)
+		storage, err := media.NewStorage(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Bucket)
 		if err != nil {
 			log.Printf("storage init failed (uploads disabled): %v", err)
 		} else {

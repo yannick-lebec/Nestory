@@ -4,52 +4,74 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"strings"
 
-	"github.com/minio/minio-go/v7"
-	"github.com/minio/minio-go/v7/pkg/credentials"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/credentials"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 )
 
 type Storage struct {
-	client   *minio.Client
-	bucket   string
-	endpoint string
+	client    *s3.Client
+	bucket    string
+	publicURL string // base URL for public file access
 }
 
-func NewStorage(endpoint, accessKey, secretKey, bucket string, useSSL bool) (*Storage, error) {
-	client, err := minio.New(endpoint, &minio.Options{
-		Creds:  credentials.NewStaticV4(accessKey, secretKey, ""),
-		Secure: useSSL,
-	})
+// NewStorage creates an S3-compatible storage client.
+// endpoint is the full S3 API URL, e.g.:
+//   - Supabase: https://<ref>.supabase.co/storage/v1/s3
+//   - MinIO:    http://localhost:9000
+func NewStorage(endpoint, accessKey, secretKey, bucket string) (*Storage, error) {
+	// Derive public URL base for Supabase Storage
+	// Supabase S3 endpoint: https://<ref>.supabase.co/storage/v1/s3
+	// Public URL base:      https://<ref>.supabase.co/storage/v1/object/public/<bucket>
+	publicBase := endpoint
+	if strings.Contains(endpoint, "supabase.co") {
+		base := strings.Replace(endpoint, "/storage/v1/s3", "", 1)
+		publicBase = fmt.Sprintf("%s/storage/v1/object/public/%s", base, bucket)
+	} else {
+		// MinIO / generic S3
+		publicBase = fmt.Sprintf("%s/%s", strings.TrimRight(endpoint, "/"), bucket)
+	}
+
+	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
+		awsconfig.WithCredentialsProvider(
+			credentials.NewStaticCredentialsProvider(accessKey, secretKey, ""),
+		),
+		awsconfig.WithRegion("auto"),
+	)
 	if err != nil {
 		return nil, err
 	}
 
-	// Ensure bucket exists
-	ctx := context.Background()
-	exists, err := client.BucketExists(ctx, bucket)
-	if err != nil {
-		return nil, fmt.Errorf("bucket check failed: %w", err)
-	}
-	if !exists {
-		if err := client.MakeBucket(ctx, bucket, minio.MakeBucketOptions{}); err != nil {
-			return nil, fmt.Errorf("bucket creation failed: %w", err)
-		}
-	}
+	client := s3.NewFromConfig(cfg, func(o *s3.Options) {
+		o.BaseEndpoint = aws.String(endpoint)
+		o.UsePathStyle = true
+	})
 
-	return &Storage{client: client, bucket: bucket, endpoint: endpoint}, nil
+	return &Storage{client: client, bucket: bucket, publicURL: publicBase}, nil
 }
 
 func (s *Storage) Upload(ctx context.Context, key string, r io.Reader, size int64, contentType string) error {
-	_, err := s.client.PutObject(ctx, s.bucket, key, r, size, minio.PutObjectOptions{
-		ContentType: contentType,
+	_, err := s.client.PutObject(ctx, &s3.PutObjectInput{
+		Bucket:        aws.String(s.bucket),
+		Key:           aws.String(key),
+		Body:          r,
+		ContentLength: aws.Int64(size),
+		ContentType:   aws.String(contentType),
 	})
 	return err
 }
 
 func (s *Storage) Delete(ctx context.Context, key string) error {
-	return s.client.RemoveObject(ctx, s.bucket, key, minio.RemoveObjectOptions{})
+	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
+		Bucket: aws.String(s.bucket),
+		Key:    aws.String(key),
+	})
+	return err
 }
 
 func (s *Storage) PublicURL(key string) string {
-	return fmt.Sprintf("https://%s/%s/%s", s.endpoint, s.bucket, key)
+	return fmt.Sprintf("%s/%s", s.publicURL, key)
 }
