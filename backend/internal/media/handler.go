@@ -17,9 +17,9 @@ func NewHandler(svc *Service) *Handler {
 }
 
 func (h *Handler) Register(r *gin.RouterGroup) {
-	r.POST("/:memoryId/media", h.upload)
-	r.GET("/:memoryId/media", h.list)
-	r.DELETE("/:memoryId/media/:mediaId", h.delete)
+	r.POST("/:id/media", h.upload)
+	r.GET("/:id/media", h.list)
+	r.DELETE("/:id/media/:mediaId", h.delete)
 }
 
 func (h *Handler) upload(c *gin.Context) {
