@@ -66,6 +66,30 @@ func (r *Repository) ListMembers(ctx context.Context, familyID string) ([]Member
 	return members, nil
 }
 
+func (r *Repository) FindByUserID(ctx context.Context, userID string) ([]Family, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT f.id, f.name, f.created_by, f.created_at
+		FROM families f
+		JOIN family_members fm ON fm.family_id = f.id
+		WHERE fm.user_id = $1
+		ORDER BY f.created_at DESC
+	`, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var families []Family
+	for rows.Next() {
+		var f Family
+		if err := rows.Scan(&f.ID, &f.Name, &f.CreatedBy, &f.CreatedAt); err != nil {
+			return nil, err
+		}
+		families = append(families, f)
+	}
+	return families, nil
+}
+
 func (r *Repository) IsMember(ctx context.Context, familyID, userID string) (bool, error) {
 	var count int
 	err := r.db.QueryRow(ctx, `

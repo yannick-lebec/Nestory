@@ -10,12 +10,14 @@ class ApiError extends Error {
 
 async function request<T>(path: string, init: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem('token')
+  const familyId = JSON.parse(localStorage.getItem('nestory-auth') ?? '{}')?.state?.familyId
 
   const res = await fetch(`${BASE_URL}${path}`, {
     ...init,
     headers: {
       'Content-Type': 'application/json',
       ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...(familyId ? { 'X-Family-Id': familyId } : {}),
       ...init.headers,
     },
   })

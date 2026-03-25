@@ -17,6 +17,7 @@ func NewHandler(svc *Service) *Handler {
 }
 
 func (h *Handler) Register(r *gin.RouterGroup) {
+	r.GET("/mine", h.mine)
 	r.POST("", h.create)
 	r.GET("/:id", h.get)
 	r.GET("/:id/members", h.listMembers)
@@ -46,6 +47,16 @@ func (h *Handler) get(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, family)
+}
+
+func (h *Handler) mine(c *gin.Context) {
+	userID := middleware.GetUserID(c)
+	families, err := h.svc.GetUserFamilies(c.Request.Context(), userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to get families"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"families": families})
 }
 
 func (h *Handler) listMembers(c *gin.Context) {

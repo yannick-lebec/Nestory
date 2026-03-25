@@ -45,6 +45,13 @@ func GetUserID(c *gin.Context) string {
 }
 
 func GetFamilyID(c *gin.Context) string {
+	// Header takes precedence (client passes it explicitly after family selection)
+	if id := c.GetHeader("X-Family-Id"); id != "" {
+		return id
+	}
 	id, _ := c.Get("family_id")
-	return id.(string)
+	if s, ok := id.(string); ok {
+		return s
+	}
+	return ""
 }

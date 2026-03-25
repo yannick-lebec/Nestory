@@ -50,3 +50,7 @@ func (s *Service) Get(ctx context.Context, familyID string) (*Family, error) {
 func (s *Service) ListMembers(ctx context.Context, familyID string) ([]Member, error) {
 	return s.repo.ListMembers(ctx, familyID)
 }
+
+func (s *Service) GetUserFamilies(ctx context.Context, userID string) ([]Family, error) {
+	return s.repo.FindByUserID(ctx, userID)
+}
