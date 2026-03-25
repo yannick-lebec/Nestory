@@ -97,10 +97,20 @@ func main() {
 }
 
 func corsMiddleware() gin.HandlerFunc {
+	allowed := map[string]bool{
+		"http://localhost:5173": true,
+	}
+	if origin := os.Getenv("FRONTEND_URL"); origin != "" {
+		allowed[origin] = true
+	}
+
 	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://localhost:5173")
+		origin := c.GetHeader("Origin")
+		if allowed[origin] {
+			c.Header("Access-Control-Allow-Origin", origin)
+		}
 		c.Header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS")
-		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type")
+		c.Header("Access-Control-Allow-Headers", "Authorization, Content-Type, X-Family-Id")
 
 		if c.Request.Method == "OPTIONS" {
 			c.AbortWithStatus(http.StatusNoContent)
