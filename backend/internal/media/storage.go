@@ -64,6 +64,16 @@ func (s *Storage) Upload(ctx context.Context, key string, r io.Reader, size int6
 	return err
 }
 
+func (s *Storage) Copy(ctx context.Context, srcKey, dstKey string) error {
+	copySource := fmt.Sprintf("%s/%s", s.bucket, srcKey)
+	_, err := s.client.CopyObject(ctx, &s3.CopyObjectInput{
+		Bucket:     aws.String(s.bucket),
+		CopySource: aws.String(copySource),
+		Key:        aws.String(dstKey),
+	})
+	return err
+}
+
 func (s *Storage) Delete(ctx context.Context, key string) error {
 	_, err := s.client.DeleteObject(ctx, &s3.DeleteObjectInput{
 		Bucket: aws.String(s.bucket),
@@ -74,4 +84,8 @@ func (s *Storage) Delete(ctx context.Context, key string) error {
 
 func (s *Storage) PublicURL(key string) string {
 	return fmt.Sprintf("%s/%s", s.publicURL, key)
+}
+
+func (s *Storage) BaseURL() string {
+	return s.publicURL
 }

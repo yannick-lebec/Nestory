@@ -1,5 +1,5 @@
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { Home, Clock, BookImage, CalendarDays, Search, Plus, LogOut } from 'lucide-react'
+import { Home, Clock, BookImage, CalendarDays, Search, Plus, LogOut, Upload } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth'
 
@@ -51,8 +51,15 @@ export function AppLayout() {
         </nav>
 
         <button
+          onClick={() => navigate('/import')}
+          className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-2"
+        >
+          <Upload size={16} />
+          Importer des photos
+        </button>
+        <button
           onClick={() => navigate('/memories/add')}
-          className="flex items-center gap-2 bg-violet-600 hover:bg-violet-700 text-white px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-3"
+          className="flex items-center gap-2 border border-gray-200 text-gray-600 hover:bg-gray-50 px-4 py-2.5 rounded-lg text-sm font-medium transition-colors mb-3"
         >
           <Plus size={16} />
           Ajouter un souvenir
@@ -94,11 +101,11 @@ export function AppLayout() {
           </NavLink>
         ))}
         <button
-          onClick={() => navigate('/memories/add')}
+          onClick={() => navigate('/import')}
           className="flex flex-col items-center gap-1 px-3 py-1.5 text-xs text-violet-600"
         >
-          <Plus size={20} />
-          Ajouter
+          <Upload size={20} />
+          Importer
         </button>
       </nav>
     </div>

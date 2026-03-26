@@ -2,6 +2,12 @@ package memory
 
 import "time"
 
+type MediaItem struct {
+	ID        string `json:"id"`
+	MediaType string `json:"media_type"`
+	URL       string `json:"url"`
+}
+
 type Category string
 
 const (
@@ -24,9 +30,10 @@ type Memory struct {
 	LocationName string    `json:"location_name,omitempty"`
 	Mood         string    `json:"mood,omitempty"`
 	Category     Category  `json:"category"`
-	Tags         []string  `json:"tags"`
-	People       []string  `json:"people"`
-	CreatedAt    time.Time `json:"created_at"`
+	Tags         []string    `json:"tags"`
+	People       []string    `json:"people"`
+	Media        []MediaItem `json:"media"`
+	CreatedAt    time.Time   `json:"created_at"`
 }
 
 type CreateMemoryRequest struct {

@@ -44,7 +44,7 @@ func (h *Handler) upload(c *gin.Context) {
 
 	m, err := h.svc.Upload(
 		c.Request.Context(),
-		c.Param("memoryId"),
+		c.Param("id"),
 		header.Filename,
 		file,
 		header.Size,
@@ -59,7 +59,7 @@ func (h *Handler) upload(c *gin.Context) {
 }
 
 func (h *Handler) list(c *gin.Context) {
-	media, err := h.svc.ListByMemory(c.Request.Context(), c.Param("memoryId"))
+	media, err := h.svc.ListByMemory(c.Request.Context(), c.Param("id"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to list media"})
 		return

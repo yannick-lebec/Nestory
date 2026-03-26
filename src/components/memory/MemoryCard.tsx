@@ -1,4 +1,8 @@
-import { MapPin, Tag, Users } from 'lucide-react'
+import { useState } from 'react'
+import { MapPin, Tag, Users, Trash2 } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import { useQueryClient } from '@tanstack/react-query'
+import { api } from '@/lib/api'
 import type { Memory, MemoryCategory } from '@/types'
 
 const CATEGORY_EMOJI: Record<MemoryCategory, string> = {
@@ -26,6 +30,11 @@ interface Props {
 }
 
 export function MemoryCard({ memory }: Props) {
+  const [confirm, setConfirm] = useState(false)
+  const [deleting, setDeleting] = useState(false)
+  const navigate = useNavigate()
+  const queryClient = useQueryClient()
+
   // API may return null for empty arrays
   const tags = memory.tags ?? []
   const people = memory.people ?? []
@@ -33,6 +42,18 @@ export function MemoryCard({ memory }: Props) {
   const date = new Date(memory.memoryDate)
   const day = date.getDate()
   const weekday = date.toLocaleDateString('fr-FR', { weekday: 'short' })
+
+  async function handleDelete() {
+    setDeleting(true)
+    try {
+      await api.delete(`/memories/${memory.id}`)
+      queryClient.invalidateQueries({ queryKey: ['memories'] })
+      queryClient.invalidateQueries({ queryKey: ['memories-all'] })
+    } finally {
+      setDeleting(false)
+      setConfirm(false)
+    }
+  }
 
   return (
     <div className="flex gap-4">
@@ -52,9 +73,37 @@ export function MemoryCard({ memory }: Props) {
             </span>
             {memory.mood && <span className="ml-2 text-sm">{memory.mood}</span>}
           </div>
+          {confirm ? (
+            <div className="flex items-center gap-2 shrink-0">
+              <span className="text-xs text-gray-500">Supprimer ?</span>
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                className="text-xs text-white bg-red-500 hover:bg-red-600 px-2 py-1 rounded-lg disabled:opacity-50"
+              >
+                {deleting ? '…' : 'Oui'}
+              </button>
+              <button
+                onClick={() => setConfirm(false)}
+                className="text-xs text-gray-500 hover:text-gray-700 px-2 py-1 rounded-lg border border-gray-200"
+              >
+                Non
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirm(true)}
+              className="text-gray-300 hover:text-red-400 transition-colors shrink-0"
+            >
+              <Trash2 size={15} />
+            </button>
+          )}
         </div>
 
-        <h3 className="font-semibold text-gray-900 mb-1">{memory.title}</h3>
+        <h3
+          className="font-semibold text-gray-900 mb-1 cursor-pointer hover:text-violet-600 transition-colors"
+          onClick={() => navigate(`/memories/${memory.id}`)}
+        >{memory.title}</h3>
 
         {memory.description && (
           <p className="text-sm text-gray-500 line-clamp-2 mb-3">{memory.description}</p>

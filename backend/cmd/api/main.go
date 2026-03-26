@@ -16,6 +16,7 @@ import (
 	"nestory/api/config"
 	"nestory/api/internal/auth"
 	"nestory/api/internal/family"
+	"nestory/api/internal/importer"
 	"nestory/api/internal/media"
 	"nestory/api/internal/memory"
 	"nestory/api/internal/shared/middleware"
@@ -50,25 +51,30 @@ func main() {
 	familySvc := family.NewService(familyRepo)
 	familyHandler := family.NewHandler(familySvc)
 
-	memoryRepo := memory.NewRepository(db)
-	memorySvc := memory.NewService(memoryRepo)
-	memoryHandler := memory.NewHandler(memorySvc)
-
 	// Media (optional — requires S3 config)
 	var mediaHandler *media.Handler
+	var mediaBaseURL string
+	var importHandler *importer.Handler
 	if cfg.StorageEnabled {
 		storage, err := media.NewStorage(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Bucket)
 		if err != nil {
 			log.Printf("storage init failed (uploads disabled): %v", err)
 		} else {
+			mediaBaseURL = storage.BaseURL()
 			mediaRepo := media.NewRepository(db)
 			mediaSvc := media.NewService(mediaRepo, storage)
 			mediaHandler = media.NewHandler(mediaSvc)
+			importSvc := importer.NewService(db, storage)
+			importHandler = importer.NewHandler(importSvc)
 			log.Println("storage connected")
 		}
 	} else {
 		log.Println("storage not configured — uploads disabled")
 	}
+
+	memoryRepo := memory.NewRepository(db, mediaBaseURL)
+	memorySvc := memory.NewService(memoryRepo)
+	memoryHandler := memory.NewHandler(memorySvc)
 
 	// Router
 	r := gin.Default()
@@ -87,6 +93,9 @@ func main() {
 	memoryHandler.Register(protected.Group("/memories"))
 	if mediaHandler != nil {
 		mediaHandler.Register(protected.Group("/memories"))
+	}
+	if importHandler != nil {
+		importHandler.Register(protected.Group("/import"))
 	}
 
 	r.GET("/health", func(c *gin.Context) {

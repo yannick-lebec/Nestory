@@ -10,6 +10,8 @@ import { AlbumsPage } from '@/pages/AlbumsPage'
 import { RecapsPage } from '@/pages/RecapsPage'
 import { SearchPage } from '@/pages/SearchPage'
 import { AddMemoryPage } from '@/pages/AddMemoryPage'
+import { MemoryDetailPage } from '@/pages/MemoryDetailPage'
+import { ImportPage } from '@/pages/ImportPage'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
@@ -28,6 +30,8 @@ export const router = createBrowserRouter([
           { path: 'recaps', element: <RecapsPage /> },
           { path: 'search', element: <SearchPage /> },
           { path: 'memories/add', element: <AddMemoryPage /> },
+          { path: 'memories/:id', element: <MemoryDetailPage /> },
+          { path: 'import', element: <ImportPage /> },
         ],
       },
     ],

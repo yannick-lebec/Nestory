@@ -47,11 +47,15 @@ func (h *Handler) create(c *gin.Context) {
 func (h *Handler) list(c *gin.Context) {
 	familyID := middleware.GetFamilyID(c)
 
+	limit := 20
+	if l, err := strconv.Atoi(c.Query("limit")); err == nil && l > 0 && l <= 200 {
+		limit = l
+	}
 	filter := ListMemoriesFilter{
 		FamilyID: familyID,
 		Search:   c.Query("q"),
 		Category: Category(c.Query("category")),
-		Limit:    20,
+		Limit:    limit,
 	}
 
 	if y, err := strconv.Atoi(c.Query("year")); err == nil {

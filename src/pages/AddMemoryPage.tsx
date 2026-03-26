@@ -68,7 +68,6 @@ export function AddMemoryPage() {
         people,
       })
       setCreatedMemoryId(mem.id)
-      navigate('/timeline')
     } catch {
       setError('Impossible de sauvegarder le souvenir')
     } finally {
@@ -234,11 +233,10 @@ export function AddMemoryPage() {
           </div>
         </div>
 
-        {/* Photos — disponible après création du souvenir */}
-        {createdMemoryId && (
+        {/* Photos */}
+        {createdMemoryId ? (
           <PhotoUploader memoryId={createdMemoryId} />
-        )}
-        {!createdMemoryId && (
+        ) : (
           <div className="bg-gray-50 border border-dashed border-gray-200 rounded-xl p-4 text-center">
             <p className="text-xs text-gray-400">Les photos pourront être ajoutées après la sauvegarde</p>
           </div>
@@ -249,20 +247,32 @@ export function AddMemoryPage() {
         )}
 
         <div className="flex gap-3">
-          <button
-            type="button"
-            onClick={() => navigate(-1)}
-            className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium py-3 rounded-xl text-sm transition-colors"
-          >
-            Annuler
-          </button>
-          <button
-            type="submit"
-            disabled={loading}
-            className="flex-1 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-medium py-3 rounded-xl text-sm transition-colors"
-          >
-            {loading ? 'Sauvegarde…' : 'Sauvegarder'}
-          </button>
+          {createdMemoryId ? (
+            <button
+              type="button"
+              onClick={() => navigate('/timeline')}
+              className="flex-1 bg-violet-600 hover:bg-violet-700 text-white font-medium py-3 rounded-xl text-sm transition-colors"
+            >
+              Terminer
+            </button>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => navigate(-1)}
+                className="flex-1 border border-gray-200 text-gray-600 hover:bg-gray-50 font-medium py-3 rounded-xl text-sm transition-colors"
+              >
+                Annuler
+              </button>
+              <button
+                type="submit"
+                disabled={loading}
+                className="flex-1 bg-violet-600 hover:bg-violet-700 disabled:opacity-60 text-white font-medium py-3 rounded-xl text-sm transition-colors"
+              >
+                {loading ? 'Sauvegarde…' : 'Sauvegarder'}
+              </button>
+            </>
+          )}
         </div>
       </form>
     </div>

@@ -14,11 +14,12 @@ import (
 var ErrNotFound = errors.New("memory not found")
 
 type Repository struct {
-	db *pgxpool.Pool
+	db           *pgxpool.Pool
+	mediaBaseURL string
 }
 
-func NewRepository(db *pgxpool.Pool) *Repository {
-	return &Repository{db: db}
+func NewRepository(db *pgxpool.Pool, mediaBaseURL string) *Repository {
+	return &Repository{db: db, mediaBaseURL: mediaBaseURL}
 }
 
 func (r *Repository) Create(ctx context.Context, m *Memory) error {
@@ -77,6 +78,10 @@ func (r *Repository) FindByID(ctx context.Context, id string) (*Memory, error) {
 		return nil, err
 	}
 	m.People, err = r.findPeople(ctx, id)
+	if err != nil {
+		return nil, err
+	}
+	m.Media, err = r.findMedia(ctx, id)
 	return m, err
 }
 
@@ -135,7 +140,67 @@ func (r *Repository) List(ctx context.Context, f ListMemoriesFilter) ([]Memory, 
 			&m.MemoryDate, &m.LocationName, &m.Mood, &m.Category, &m.CreatedAt); err != nil {
 			return nil, 0, err
 		}
+		m.Tags = []string{}
+		m.People = []string{}
+		m.Media = []MediaItem{}
 		memories = append(memories, m)
+	}
+
+	if len(memories) > 0 {
+		ids := make([]string, len(memories))
+		idxByID := make(map[string]int, len(memories))
+		for i, m := range memories {
+			ids[i] = m.ID
+			idxByID[m.ID] = i
+		}
+
+		// Load tags
+		tagRows, err := r.db.Query(ctx, `SELECT memory_id, tag FROM memory_tags WHERE memory_id = ANY($1)`, ids)
+		if err == nil {
+			defer tagRows.Close()
+			for tagRows.Next() {
+				var memID, tag string
+				if tagRows.Scan(&memID, &tag) == nil {
+					if idx, ok := idxByID[memID]; ok {
+						memories[idx].Tags = append(memories[idx].Tags, tag)
+					}
+				}
+			}
+		}
+
+		// Load people
+		peopleRows, err := r.db.Query(ctx, `SELECT memory_id, person_name FROM memory_people WHERE memory_id = ANY($1)`, ids)
+		if err == nil {
+			defer peopleRows.Close()
+			for peopleRows.Next() {
+				var memID, person string
+				if peopleRows.Scan(&memID, &person) == nil {
+					if idx, ok := idxByID[memID]; ok {
+						memories[idx].People = append(memories[idx].People, person)
+					}
+				}
+			}
+		}
+
+		// Load media
+		if r.mediaBaseURL != "" {
+			mediaRows, err := r.db.Query(ctx, `SELECT id, memory_id, media_type, storage_key FROM memory_media WHERE memory_id = ANY($1) ORDER BY created_at ASC`, ids)
+			if err == nil {
+				defer mediaRows.Close()
+				for mediaRows.Next() {
+					var id, memID, mediaType, storageKey string
+					if mediaRows.Scan(&id, &memID, &mediaType, &storageKey) == nil {
+						if idx, ok := idxByID[memID]; ok {
+							memories[idx].Media = append(memories[idx].Media, MediaItem{
+								ID:        id,
+								MediaType: mediaType,
+								URL:       r.mediaBaseURL + "/" + storageKey,
+							})
+						}
+					}
+				}
+			}
+		}
 	}
 
 	var total int
@@ -173,6 +238,28 @@ func (r *Repository) findTags(ctx context.Context, memoryID string) ([]string, e
 		tags = append(tags, t)
 	}
 	return tags, nil
+}
+
+func (r *Repository) findMedia(ctx context.Context, memoryID string) ([]MediaItem, error) {
+	rows, err := r.db.Query(ctx, `SELECT id, media_type, storage_key FROM memory_media WHERE memory_id = $1 ORDER BY created_at ASC`, memoryID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []MediaItem
+	for rows.Next() {
+		var item MediaItem
+		var storageKey string
+		if err := rows.Scan(&item.ID, &item.MediaType, &storageKey); err != nil {
+			return nil, err
+		}
+		item.URL = r.mediaBaseURL + "/" + storageKey
+		items = append(items, item)
+	}
+	if items == nil {
+		items = []MediaItem{}
+	}
+	return items, nil
 }
 
 func (r *Repository) findPeople(ctx context.Context, memoryID string) ([]string, error) {
