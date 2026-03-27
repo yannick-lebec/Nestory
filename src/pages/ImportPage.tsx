@@ -299,8 +299,8 @@ export function ImportPage() {
 
         {error && <p className="mt-4 text-sm text-red-500">{error}</p>}
 
-        {/* Fixed bottom bar */}
-        <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-3 max-w-2xl mx-auto">
+        {/* Fixed bottom bar — above mobile nav (z-50) */}
+        <div className="fixed bottom-16 md:bottom-0 left-0 right-0 bg-white border-t border-gray-100 p-4 flex gap-3 max-w-2xl mx-auto z-60">
           <button
             onClick={() => setStep('pick')}
             className="flex-none border border-gray-200 text-gray-600 px-4 py-3 rounded-xl text-sm"
