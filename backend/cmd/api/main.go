@@ -56,7 +56,7 @@ func main() {
 	var mediaBaseURL string
 	var importHandler *importer.Handler
 	if cfg.StorageEnabled {
-		storage, err := media.NewStorage(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Bucket)
+		storage, err := media.NewStorage(cfg.S3Endpoint, cfg.S3AccessKey, cfg.S3SecretKey, cfg.S3Bucket, cfg.S3Region)
 		if err != nil {
 			log.Printf("storage init failed (uploads disabled): %v", err)
 		} else {

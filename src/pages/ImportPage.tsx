@@ -85,7 +85,22 @@ export function ImportPage() {
         xhr.onload = () => {
           if (xhr.status >= 200 && xhr.status < 300) {
             try {
-              resolve(JSON.parse(xhr.responseText))
+              const raw = JSON.parse(xhr.responseText)
+              // backend returns snake_case — normalize manually
+              resolve({
+                sessionId: raw.session_id,
+                groups: (raw.groups ?? []).map((g: Record<string, unknown>) => ({
+                  date: g.date,
+                  title: g.title,
+                  photos: ((g.photos as Record<string, unknown>[]) ?? []).map((p) => ({
+                    id: p.id,
+                    url: p.url,
+                    takenAt: p.taken_at,
+                    filename: p.filename,
+                  })),
+                })),
+                total: raw.total,
+              })
             } catch {
               reject(new Error('Invalid response'))
             }

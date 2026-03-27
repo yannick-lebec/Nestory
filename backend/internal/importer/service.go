@@ -5,6 +5,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"mime/multipart"
 	"sort"
 	"strings"
@@ -64,6 +65,7 @@ func (s *Service) Analyze(ctx context.Context, files []*multipart.FileHeader) (*
 		key := fmt.Sprintf("import/%s/%s%s", sessionID, photoID, ext)
 
 		if err := s.storage.Upload(ctx, key, bytes.NewReader(data), int64(len(data)), contentType); err != nil {
+			log.Printf("importer: upload failed for %s: %v", fh.Filename, err)
 			continue
 		}
 
@@ -78,6 +80,8 @@ func (s *Service) Analyze(ctx context.Context, files []*multipart.FileHeader) (*
 	}
 
 	s.sessions[sessionID] = photoMap
+
+	log.Printf("importer: analyze done — %d/%d files uploaded, %d groups", len(photoMap), len(files), len(groupByDay(photoMap)))
 
 	groups := groupByDay(photoMap)
 	return &AnalyzeResponse{

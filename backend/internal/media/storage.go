@@ -22,7 +22,7 @@ type Storage struct {
 // endpoint is the full S3 API URL, e.g.:
 //   - Supabase: https://<ref>.supabase.co/storage/v1/s3
 //   - MinIO:    http://localhost:9000
-func NewStorage(endpoint, accessKey, secretKey, bucket string) (*Storage, error) {
+func NewStorage(endpoint, accessKey, secretKey, bucket, region string) (*Storage, error) {
 	// Derive public URL base for Supabase Storage
 	// Supabase S3 endpoint: https://<ref>.supabase.co/storage/v1/s3
 	// Public URL base:      https://<ref>.supabase.co/storage/v1/object/public/<bucket>
@@ -35,11 +35,15 @@ func NewStorage(endpoint, accessKey, secretKey, bucket string) (*Storage, error)
 		publicBase = fmt.Sprintf("%s/%s", strings.TrimRight(endpoint, "/"), bucket)
 	}
 
+	if region == "" {
+		region = "auto"
+	}
+
 	cfg, err := awsconfig.LoadDefaultConfig(context.Background(),
 		awsconfig.WithCredentialsProvider(
 			credentials.NewStaticCredentialsProvider(accessKey, secretKey, ""),
 		),
-		awsconfig.WithRegion("auto"),
+		awsconfig.WithRegion(region),
 	)
 	if err != nil {
 		return nil, err
