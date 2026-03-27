@@ -84,7 +84,7 @@ export function AppLayout() {
 
       {/* Mobile bottom nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 flex items-center justify-around px-2 py-2 z-50">
-        {navItems.map(({ to, icon: Icon, label, end }) => (
+        {navItems.filter(({ to }) => to !== '/recaps').map(({ to, icon: Icon, label, end }) => (
           <NavLink
             key={to}
             to={to}
