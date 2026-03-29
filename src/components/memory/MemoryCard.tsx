@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQueryClient } from '@tanstack/react-query'
 import { api } from '@/lib/api'
 import type { Memory, MemoryCategory } from '@/types'
+import { PhotoLightbox } from '@/components/media/PhotoLightbox'
 
 const CATEGORY_EMOJI: Record<MemoryCategory, string> = {
   anniversary: '🎂',
@@ -32,6 +33,7 @@ interface Props {
 export function MemoryCard({ memory }: Props) {
   const [confirm, setConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [lightbox, setLightbox] = useState<number | null>(null)
   const navigate = useNavigate()
   const queryClient = useQueryClient()
 
@@ -114,9 +116,10 @@ export function MemoryCard({ memory }: Props) {
             {media.slice(0, 3).map((m, i) => (
               <div
                 key={m.id}
-                className={`relative overflow-hidden rounded-lg bg-gray-100 ${media.length === 1 ? 'w-full aspect-video' : 'flex-1 aspect-square'}`}
+                className={`relative overflow-hidden rounded-lg bg-gray-100 cursor-pointer ${media.length === 1 ? 'w-full aspect-video' : 'flex-1 aspect-square'}`}
+                onClick={(e) => { e.stopPropagation(); setLightbox(i) }}
               >
-                <img src={m.url} alt="" className="w-full h-full object-cover" />
+                <img src={m.url} alt="" className="w-full h-full object-cover hover:scale-105 transition-transform" />
                 {i === 2 && media.length > 3 && (
                   <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-semibold text-sm">
                     +{media.length - 3}
@@ -125,6 +128,10 @@ export function MemoryCard({ memory }: Props) {
               </div>
             ))}
           </div>
+        )}
+
+        {lightbox !== null && (
+          <PhotoLightbox photos={media} initialIndex={lightbox} onClose={() => setLightbox(null)} />
         )}
 
         <div className="flex flex-wrap gap-3 text-xs text-gray-400">

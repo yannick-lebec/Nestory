@@ -23,7 +23,7 @@ export function AppLayout() {
   return (
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="hidden md:flex flex-col w-64 bg-white border-r border-gray-100 px-4 py-6 gap-1">
+      <aside className="hidden md:flex flex-col fixed top-0 left-0 h-screen w-64 bg-white border-r border-gray-100 px-4 py-6 gap-1">
         <div className="px-3 mb-6">
           <h1 className="text-xl font-bold text-violet-600">Nestory</h1>
           <p className="text-xs text-gray-400 mt-0.5">Journal de famille</p>
@@ -78,7 +78,7 @@ export function AppLayout() {
       </aside>
 
       {/* Main content */}
-      <main className="flex-1 overflow-auto">
+      <main className="flex-1 md:ml-64 overflow-auto">
         <Outlet />
       </main>
 

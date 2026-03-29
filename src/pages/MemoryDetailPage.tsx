@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { ArrowLeft, MapPin, Tag, Users, Trash2, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ArrowLeft, MapPin, Tag, Users, Trash2 } from 'lucide-react'
+import { PhotoLightbox } from '@/components/media/PhotoLightbox'
 import { useQueryClient } from '@tanstack/react-query'
 import { useMemory } from '@/hooks/useMemory'
 import { useAuthStore } from '@/store/auth'
@@ -27,13 +28,6 @@ export function MemoryDetailPage() {
   const [deleting, setDeleting] = useState(false)
 
   const media = memory?.media ?? []
-
-  function prevPhoto() {
-    setLightbox((i) => (i! > 0 ? i! - 1 : media.length - 1))
-  }
-  function nextPhoto() {
-    setLightbox((i) => (i! < media.length - 1 ? i! + 1 : 0))
-  }
 
   async function handleDelete() {
     setDeleting(true)
@@ -162,32 +156,8 @@ export function MemoryDetailPage() {
         </div>
       )}
 
-      {/* Lightbox */}
       {lightbox !== null && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" onClick={() => setLightbox(null)}>
-          <button className="absolute top-4 right-4 text-white/70 hover:text-white" onClick={() => setLightbox(null)}>
-            <X size={28} />
-          </button>
-          {media.length > 1 && (
-            <>
-              <button className="absolute left-4 text-white/70 hover:text-white p-2" onClick={(e) => { e.stopPropagation(); prevPhoto() }}>
-                <ChevronLeft size={36} />
-              </button>
-              <button className="absolute right-4 text-white/70 hover:text-white p-2" onClick={(e) => { e.stopPropagation(); nextPhoto() }}>
-                <ChevronRight size={36} />
-              </button>
-            </>
-          )}
-          <img
-            src={media[lightbox].url}
-            alt=""
-            className="max-h-screen max-w-screen-lg object-contain px-16"
-            onClick={(e) => e.stopPropagation()}
-          />
-          {media.length > 1 && (
-            <p className="absolute bottom-4 text-white/50 text-sm">{lightbox + 1} / {media.length}</p>
-          )}
-        </div>
+        <PhotoLightbox photos={media} initialIndex={lightbox} onClose={() => setLightbox(null)} />
       )}
     </div>
   )

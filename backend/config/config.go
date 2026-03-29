@@ -16,6 +16,7 @@ type Config struct {
 	S3SecretKey string
 	S3Region       string
 	StorageEnabled bool
+	AnthropicKey   string
 }
 
 func Load() (*Config, error) {
@@ -28,7 +29,8 @@ func Load() (*Config, error) {
 		S3Bucket:    getEnv("S3_BUCKET", "nestory-media"),
 		S3AccessKey: getEnv("S3_ACCESS_KEY", ""),
 		S3SecretKey: getEnv("S3_SECRET_KEY", ""),
-		S3Region:    getEnv("S3_REGION", "auto"),
+		S3Region:     getEnv("S3_REGION", "auto"),
+		AnthropicKey: getEnv("ANTHROPIC_API_KEY", ""),
 	}
 	cfg.StorageEnabled = cfg.S3AccessKey != "" && cfg.S3SecretKey != ""
 

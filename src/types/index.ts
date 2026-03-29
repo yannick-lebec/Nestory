@@ -68,13 +68,32 @@ export interface Album {
   createdAt: string
 }
 
-export interface Recap {
+export interface RecapMemory {
   id: string
-  familyId: string
+  title: string
+  description?: string
+  aiDescription?: string
+  memoryDate: string
+  locationName?: string
+  people: string[]
+  coverUrl?: string
+  photoUrls?: string[]
+}
+
+export interface RecapCategory {
+  key: string
+  label: string
+  emoji: string
+  count: number
+  memories: RecapMemory[]
+}
+
+export interface Recap {
   month: number
   year: number
-  title: string
-  summary: string
-  coverImageUrl?: string
-  highlightCount: number
+  monthLabel: string
+  totalMemories: number
+  totalPhotos: number
+  categories: RecapCategory[]
+  aiAvailable: boolean
 }

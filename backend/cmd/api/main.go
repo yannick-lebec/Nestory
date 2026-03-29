@@ -19,6 +19,7 @@ import (
 	"nestory/api/internal/importer"
 	"nestory/api/internal/media"
 	"nestory/api/internal/memory"
+	"nestory/api/internal/recap"
 	"nestory/api/internal/shared/middleware"
 )
 
@@ -76,6 +77,9 @@ func main() {
 	memorySvc := memory.NewService(memoryRepo)
 	memoryHandler := memory.NewHandler(memorySvc)
 
+	recapSvc := recap.NewService(memorySvc, cfg.AnthropicKey)
+	recapHandler := recap.NewHandler(recapSvc)
+
 	// Router
 	r := gin.Default()
 	r.Use(corsMiddleware())
@@ -97,6 +101,7 @@ func main() {
 	if importHandler != nil {
 		importHandler.Register(protected.Group("/import"))
 	}
+	recapHandler.Register(protected.Group("/recap"))
 
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{"status": "ok"})
