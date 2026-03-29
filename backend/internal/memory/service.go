@@ -61,3 +61,7 @@ func (s *Service) List(ctx context.Context, f ListMemoriesFilter) ([]Memory, int
 func (s *Service) Delete(ctx context.Context, id, familyID string) error {
 	return s.repo.Delete(ctx, id, familyID)
 }
+
+func (s *Service) AvailableMonths(ctx context.Context, familyID string) ([][2]int, error) {
+	return s.repo.AvailableMonths(ctx, familyID)
+}

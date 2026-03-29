@@ -46,6 +46,18 @@ func NewService(memorySvc *memory.Service, anthropicKey string) *Service {
 	return &Service{memorySvc: memorySvc, anthropicKey: anthropicKey}
 }
 
+func (s *Service) AvailableMonths(ctx context.Context, familyID string) ([]AvailableMonth, error) {
+	pairs, err := s.memorySvc.AvailableMonths(ctx, familyID)
+	if err != nil {
+		return nil, err
+	}
+	months := make([]AvailableMonth, len(pairs))
+	for i, p := range pairs {
+		months[i] = AvailableMonth{Year: p[0], Month: p[1]}
+	}
+	return months, nil
+}
+
 func (s *Service) Generate(ctx context.Context, familyID string, year, month int) (*RecapResponse, error) {
 	memories, _, err := s.memorySvc.List(ctx, memory.ListMemoriesFilter{
 		FamilyID: familyID,

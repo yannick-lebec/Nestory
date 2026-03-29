@@ -20,6 +20,11 @@ type CategoryGroup struct {
 	Memories []MemorySummary `json:"memories"`
 }
 
+type AvailableMonth struct {
+	Year  int `json:"year"`
+	Month int `json:"month"`
+}
+
 type RecapResponse struct {
 	Month         int             `json:"month"`
 	Year          int             `json:"year"`

@@ -1,30 +1,28 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { ChevronLeft, ChevronRight, Sparkles, Camera } from 'lucide-react'
-import { useRecap } from '@/hooks/useRecap'
+import { useRecap, useRecapMonths } from '@/hooks/useRecap'
 import { PhotoLightbox } from '@/components/media/PhotoLightbox'
 import type { RecapMemory } from '@/types'
 
 const MONTHS_FR = ['', 'Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
   'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre']
 
-function clampMonth(year: number, month: number): [number, number] {
-  if (month < 1) return [year - 1, 12]
-  if (month > 12) return [year + 1, 1]
-  return [year, month]
-}
-
 export function RecapsPage() {
-  const now = new Date()
-  const [year, setYear] = useState(now.getFullYear())
-  const [month, setMonth] = useState(now.getMonth() + 1)
+  const [index, setIndex] = useState(0)
   const [lightbox, setLightbox] = useState<{ photos: { url: string }[]; index: number } | null>(null)
 
-  const { data: recap, isLoading } = useRecap(year, month)
+  const { data: availableMonths = [] } = useRecapMonths()
+
+  // Init to most recent month once loaded
+  useEffect(() => {
+    if (availableMonths.length > 0) setIndex(0)
+  }, [availableMonths.length])
+
+  const current = availableMonths[index]
+  const { data: recap, isLoading } = useRecap(current?.year ?? 0, current?.month ?? 0)
 
   function navigate(delta: number) {
-    const [y, m] = clampMonth(year, month + delta)
-    setYear(y)
-    setMonth(m)
+    setIndex((i) => Math.max(0, Math.min(availableMonths.length - 1, i + delta)))
   }
 
   function openLightbox(memories: RecapMemory[], memIndex: number) {
@@ -49,11 +47,11 @@ export function RecapsPage() {
           <ChevronLeft size={22} />
         </button>
         <span className="font-semibold text-gray-800">
-          {MONTHS_FR[month]} {year}
+          {current ? `${MONTHS_FR[current.month]} ${current.year}` : '—'}
         </span>
         <button
           onClick={() => navigate(1)}
-          disabled={year === now.getFullYear() && month >= now.getMonth() + 1}
+          disabled={index >= availableMonths.length - 1}
           className="p-1 text-gray-400 hover:text-gray-700 transition-colors disabled:opacity-30"
         >
           <ChevronRight size={22} />

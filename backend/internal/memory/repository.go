@@ -279,5 +279,29 @@ func (r *Repository) findPeople(ctx context.Context, memoryID string) ([]string,
 	return people, nil
 }
 
+func (r *Repository) AvailableMonths(ctx context.Context, familyID string) ([][2]int, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT EXTRACT(YEAR FROM memory_date)::int, EXTRACT(MONTH FROM memory_date)::int
+		FROM memories
+		WHERE family_id = $1
+		GROUP BY 1, 2
+		ORDER BY 1 DESC, 2 DESC
+	`, familyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var result [][2]int
+	for rows.Next() {
+		var y, m int
+		if err := rows.Scan(&y, &m); err != nil {
+			return nil, err
+		}
+		result = append(result, [2]int{y, m})
+	}
+	return result, nil
+}
+
 // suppress unused import
 var _ = time.Now
