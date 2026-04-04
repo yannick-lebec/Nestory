@@ -3,6 +3,7 @@ package family
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -96,4 +97,66 @@ func (r *Repository) IsMember(ctx context.Context, familyID, userID string) (boo
 		SELECT COUNT(*) FROM family_members WHERE family_id = $1 AND user_id = $2
 	`, familyID, userID).Scan(&count)
 	return count > 0, err
+}
+
+func (r *Repository) GetMemberRole(ctx context.Context, familyID, userID string) (Role, error) {
+	var role Role
+	err := r.db.QueryRow(ctx, `
+		SELECT role FROM family_members WHERE family_id = $1 AND user_id = $2
+	`, familyID, userID).Scan(&role)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", ErrNotFound
+	}
+	return role, err
+}
+
+func (r *Repository) CreateInvitation(ctx context.Context, inv *Invitation) error {
+	_, err := r.db.Exec(ctx, `
+		INSERT INTO family_invitations (id, family_id, code, role, created_by, created_at, expires_at)
+		VALUES ($1, $2, $3, $4, $5, $6, $7)
+	`, inv.ID, inv.FamilyID, inv.Code, inv.Role, inv.CreatedBy, inv.CreatedAt, inv.ExpiresAt)
+	return err
+}
+
+func (r *Repository) GetInvitationByCode(ctx context.Context, code string) (*Invitation, error) {
+	inv := &Invitation{}
+	err := r.db.QueryRow(ctx, `
+		SELECT id, family_id, code, role, created_by, created_at, expires_at, used_at, used_by
+		FROM family_invitations WHERE code = $1
+	`, code).Scan(&inv.ID, &inv.FamilyID, &inv.Code, &inv.Role, &inv.CreatedBy,
+		&inv.CreatedAt, &inv.ExpiresAt, &inv.UsedAt, &inv.UsedBy)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	return inv, err
+}
+
+func (r *Repository) RedeemInvitation(ctx context.Context, code, userID string) error {
+	now := time.Now()
+	_, err := r.db.Exec(ctx, `
+		UPDATE family_invitations SET used_at = $1, used_by = $2 WHERE code = $3
+	`, now, userID, code)
+	return err
+}
+
+func (r *Repository) ListInvitations(ctx context.Context, familyID string) ([]Invitation, error) {
+	rows, err := r.db.Query(ctx, `
+		SELECT id, family_id, code, role, created_by, created_at, expires_at, used_at, used_by
+		FROM family_invitations WHERE family_id = $1 ORDER BY created_at DESC
+	`, familyID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var invs []Invitation
+	for rows.Next() {
+		var inv Invitation
+		if err := rows.Scan(&inv.ID, &inv.FamilyID, &inv.Code, &inv.Role, &inv.CreatedBy,
+			&inv.CreatedAt, &inv.ExpiresAt, &inv.UsedAt, &inv.UsedBy); err != nil {
+			return nil, err
+		}
+		invs = append(invs, inv)
+	}
+	return invs, nil
 }

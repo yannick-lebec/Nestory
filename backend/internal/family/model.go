@@ -30,8 +30,22 @@ type CreateFamilyRequest struct {
 	Name string `json:"name" binding:"required,min=2,max=100"`
 }
 
-type InviteMemberRequest struct {
-	Email       string `json:"email" binding:"required,email"`
-	Role        Role   `json:"role" binding:"required,oneof=parent child guest"`
-	DisplayName string `json:"display_name" binding:"required,min=2"`
+type Invitation struct {
+	ID        string     `json:"id"`
+	FamilyID  string     `json:"family_id"`
+	Code      string     `json:"code"`
+	Role      Role       `json:"role"`
+	CreatedBy string     `json:"created_by"`
+	CreatedAt time.Time  `json:"created_at"`
+	ExpiresAt time.Time  `json:"expires_at"`
+	UsedAt    *time.Time `json:"used_at,omitempty"`
+	UsedBy    *string    `json:"used_by,omitempty"`
+}
+
+type GenerateInviteRequest struct {
+	Role Role `json:"role" binding:"required,oneof=parent child guest"`
+}
+
+type JoinFamilyRequest struct {
+	Code string `json:"code" binding:"required"`
 }

@@ -12,11 +12,14 @@ import { SearchPage } from '@/pages/SearchPage'
 import { AddMemoryPage } from '@/pages/AddMemoryPage'
 import { MemoryDetailPage } from '@/pages/MemoryDetailPage'
 import { ImportPage } from '@/pages/ImportPage'
+import { FamilyPage } from '@/pages/FamilyPage'
+import { JoinPage } from '@/pages/JoinPage'
 
 export const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
   { path: '/register', element: <RegisterPage /> },
   { path: '/family/create', element: <CreateFamilyPage /> },
+  { path: '/join', element: <JoinPage /> },
   {
     element: <RequireAuth />,
     children: [
@@ -32,6 +35,7 @@ export const router = createBrowserRouter([
           { path: 'memories/add', element: <AddMemoryPage /> },
           { path: 'memories/:id', element: <MemoryDetailPage /> },
           { path: 'import', element: <ImportPage /> },
+          { path: 'family', element: <FamilyPage /> },
         ],
       },
     ],

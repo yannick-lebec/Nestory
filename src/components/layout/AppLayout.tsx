@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Outlet, NavLink, useNavigate } from 'react-router-dom'
-import { Home, Clock, BookImage, CalendarDays, Search, Plus, LogOut, Upload, Menu, X } from 'lucide-react'
+import { Home, Clock, BookImage, CalendarDays, Search, Plus, LogOut, Upload, Menu, X, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useAuthStore } from '@/store/auth'
 
@@ -10,6 +10,7 @@ const navItems = [
   { to: '/albums', icon: BookImage, label: 'Albums' },
   { to: '/recaps', icon: CalendarDays, label: 'Récaps' },
   { to: '/search', icon: Search, label: 'Recherche' },
+  { to: '/family', icon: Users, label: 'Ma famille' },
 ]
 
 function SidebarContent({ onNav }: { onNav?: () => void }) {
