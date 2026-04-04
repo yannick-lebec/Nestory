@@ -25,10 +25,12 @@ export function RecapsPage() {
     setIndex((i) => Math.max(0, Math.min(availableMonths.length - 1, i + delta)))
   }
 
-  function openLightbox(memories: RecapMemory[], memIndex: number) {
-    const photos = memories.flatMap((m) => m.coverUrl ? [{ url: m.coverUrl }] : [])
+  function openLightbox(memories: RecapMemory[], photoIndex: number) {
+    const photos = memories.flatMap((m) =>
+      m.photoUrls?.length ? m.photoUrls.map((url) => ({ url })) : m.coverUrl ? [{ url: m.coverUrl }] : []
+    )
     if (photos.length === 0) return
-    setLightbox({ photos, index: Math.min(memIndex, photos.length - 1) })
+    setLightbox({ photos, index: Math.min(photoIndex, photos.length - 1) })
   }
 
   return (
@@ -111,24 +113,32 @@ export function RecapsPage() {
               </div>
 
               {/* Photo grid */}
-              {cat.memories.some((m) => m.coverUrl) && (
-                <div className="grid grid-cols-3 gap-0.5 bg-gray-100">
-                  {cat.memories.filter((m) => m.coverUrl).slice(0, 6).map((m, i) => (
-                    <div
-                      key={m.id}
-                      className="aspect-square overflow-hidden cursor-pointer relative group"
-                      onClick={() => openLightbox(cat.memories, i)}
-                    >
-                      <img src={m.coverUrl} alt={m.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                      {i === 5 && cat.memories.filter((x) => x.coverUrl).length > 6 && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-semibold text-sm">
-                          +{cat.memories.filter((x) => x.coverUrl).length - 6}
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              )}
+              {(() => {
+                const allPhotos = cat.memories.flatMap((m) =>
+                  m.photoUrls?.length ? m.photoUrls : m.coverUrl ? [m.coverUrl] : []
+                )
+                if (allPhotos.length === 0) return null
+                const visible = allPhotos.slice(0, 6)
+                const remaining = allPhotos.length - 6
+                return (
+                  <div className="grid grid-cols-3 gap-0.5 bg-gray-100">
+                    {visible.map((url, i) => (
+                      <div
+                        key={i}
+                        className="aspect-square overflow-hidden cursor-pointer relative group"
+                        onClick={() => openLightbox(cat.memories, i)}
+                      >
+                        <img src={url} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        {i === 5 && remaining > 0 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-semibold text-sm">
+                            +{remaining}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )
+              })()}
 
               {/* Memory list */}
               <div className="divide-y divide-gray-50">

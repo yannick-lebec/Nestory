@@ -104,6 +104,9 @@ func (s *Service) Generate(ctx context.Context, familyID string, year, month int
 			if len(summaries[i].PhotoURLs) == 0 {
 				continue // skip text-only memories
 			}
+			if summaries[i].Description != "" {
+				continue // already has a user comment, no need for AI
+			}
 			wg.Add(1)
 			go func(idx int, mem memory.Memory) {
 				defer wg.Done()
