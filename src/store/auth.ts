@@ -24,12 +24,16 @@ export const useAuthStore = create<AuthState>()(
         const res = await api.post<{ token: string; user: User }>('/auth/login', { email, password })
         localStorage.setItem('token', res.token)
         set({ user: res.user, token: res.token })
+        const { families } = await api.get<{ families: { id: string }[] }>('/families/mine')
+        if (families?.length) set({ familyId: families[0].id })
       },
 
       register: async (email, name, password) => {
         const res = await api.post<{ token: string; user: User }>('/auth/register', { email, name, password })
         localStorage.setItem('token', res.token)
         set({ user: res.user, token: res.token })
+        const { families } = await api.get<{ families: { id: string }[] }>('/families/mine')
+        if (families?.length) set({ familyId: families[0].id })
       },
 
       logout: () => {
